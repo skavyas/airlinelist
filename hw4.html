@@ -1,0 +1,126 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<script>
+var table = "";
+function drawTable(jsonObject) {
+    table = "<html>";
+    table += "<head></head><body><table border='1'><tr>";
+    headers = [];
+    try {
+        headers = jsonObject.Mainline.Table.Header.Data;
+    }
+    catch(e){
+	alert("JSON does not contain required information");
+	return false;
+    }
+    if(jsonObject.Mainline.Table.hasOwnProperty("Row")) {
+	row = jsonObject.Mainline.Table.Row;
+    }
+    else {
+	alert("No airlines");
+        return false;
+    }
+    for( i=0;i<headers.length;i++) 
+    {
+	table += "<td style=\"text-align: center;\"><h2>"+headers[i]+"</h2></td>";      
+    }
+    table += "</tr><tr>";
+    for(i=0;i<row.length;i++) {
+        var eachRow = row[i];
+        var keys = Object.keys(row[i]);
+        for(k=0;k<keys.length;k++) {
+            var col = eachRow[keys[k]];
+            switch(k){
+	    case 2:
+		if(typeof(col)=="object")  {
+                    if(col.hasOwnProperty("Hub")&&col.Hub.length>0) {
+                        var hub = col.Hub;
+                        table += "<td><ul>";
+                        var count = 0;
+                        for(var j=0;j<hub.length;j++) {
+                            if(count == 0){
+                                table += "<li style=\"font-weight:bold\">"+hub[j]+"</li>";
+                                count++;
+                            }   
+                            else {
+                                table += "<li>"+hub[j]+"</li>";
+                            }
+                        }       
+                        table += "</ul></td>";
+                    }   
+                    else {
+                        table += "<td></td>";
+                    }
+                }       
+                else {      
+                    table += "<td></td>";
+                }
+                continue;
+            case 4:
+		table += "<td><a href=\""+col+"\">"+col+"</a></td>";
+ 		continue;	
+            case 5:
+                if(col!=""){
+		    table += "<td><img style=\"height\:200px\;width\:100\%\" src=\""+col+"\"></img></td>";
+		}
+  		else {
+		    table += "<td></td>";
+		}
+		continue;
+	    default:
+ 		table += "<td>"+col+"</td>";
+		continue;
+    }}
+    table += "</tr>";
+    }
+    table += "</tr></table></body></html>";
+    return true;
+}
+
+function viewJSON(form) {    
+    var URL = form.path.value;
+    if(URL == "")
+    {
+	alert("Enter a file name");
+        return;
+    }
+    xmlHttp=new XMLHttpRequest();   
+    xmlHttp.open("GET",URL,false);
+    xmlHttp.send();
+    if(xmlHttp.status == 404) {
+	alert("File does not exist");
+        return;
+    }
+    else if(xmlHttp.status == 403) {
+	alert("Access denied");
+	return;
+    }
+    try {
+    	jsonObject=JSON.parse(xmlHttp.responseText);
+	output = drawTable(jsonObject);
+        if(!output) {
+		return;
+        }
+    	ele = window.open("", "Assignment4", "");
+    	ele.document.write(table);
+    	ele.document.close();
+    }
+    catch (e) { 
+	//TBD
+	alert("Invalid json");
+    }
+}
+</script>
+</HEAD>
+<BODY>
+<form name="airline-form" method="POST" id="airline-list">
+<table style="height: 300px;margin:0 auto;padding-top: 10%;">
+<tr><td><H4 style="margin: 0;">Enter URL for Airlines List JSON File</H4></td></tr>
+<tr><td style="text-align: center;"><INPUT type="text" name="path"></INPUT></br></td></tr>
+<tr><td style="text-align: center;"><input type="button" name="submit" value="Submit Query" onClick="viewJSON(this.form)"></input></td></tr>
+</table>
+</form>
+</NOSCRIPT>
+</BODY>
+</HTML>
